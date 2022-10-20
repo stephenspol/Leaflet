@@ -360,4 +360,73 @@ describe('Polygon', function () {
 			}
 		});
 	});
+
+	describe("#_containsPoint", function () {
+		beforeEach(function () {
+			map.setZoom(0); // LatLngToLayerPoint won't function correctly if points aren't on screen
+		});
+
+		it("don't throw error if polygon is empty", function () {
+			var latlngs = [];
+			var layerPoint = map.latLngToLayerPoint([0, 0]);
+			var polygon = L.polygon(latlngs);
+
+			polygon.addTo(map);
+
+			expect(function () {
+				polygon._containsPoint(layerPoint);
+			}).to.not.throwError();
+		});
+
+		it("don't throw error if not attached to map", function () {
+			var latlngs = [
+				[1, 1],
+				[1, 2],
+				[2, 2],
+				[2, 1]
+			];
+
+			var layerPoint = map.latLngToLayerPoint([1.25, 1.25]);
+			var polygon = L.polygon(latlngs);
+
+			expect(function () {
+				polygon._containsPoint(layerPoint);
+			}).to.not.throwError();
+		});
+
+		it("check if point is contained within polygon or on line", function () {
+			var latlngs = [
+				[1, 1],
+				[1, 2],
+				[2, 2],
+				[2, 1]
+			];
+			var layerPoint1 = map.latLngToLayerPoint([1, 1]);
+			var layerPoint2 = map.latLngToLayerPoint([1.25, 1.25]);
+			var layerPoint3 = map.latLngToLayerPoint([5, 5]);
+			var polygon = L.polygon(latlngs);
+
+			polygon.addTo(map);
+
+			expect(polygon._containsPoint(layerPoint1)).to.be(true);
+			expect(polygon._containsPoint(layerPoint2)).to.be(true);
+			expect(polygon._containsPoint(layerPoint3)).to.be(false);
+		});
+
+		it("check if point is contained within closed multi polygon", function () {
+			var latlngs = [
+				[[1, 1], [1, 2], [2, 2], [2, 1]]
+			];
+			var layerPoint1 = map.latLngToLayerPoint([1, 1]);
+			var layerPoint2 = map.latLngToLayerPoint([1.25, 1.25]);
+			var layerPoint3 = map.latLngToLayerPoint([5, 5]);
+			var polygon = L.polygon(latlngs);
+
+			polygon.addTo(map);
+
+			expect(polygon._containsPoint(layerPoint1)).to.be(true);
+			expect(polygon._containsPoint(layerPoint2)).to.be(true);
+			expect(polygon._containsPoint(layerPoint3)).to.be(false);
+		});
+	});
 });
