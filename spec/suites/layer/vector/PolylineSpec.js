@@ -295,4 +295,99 @@ describe('Polyline', function () {
 			expect(point.distance).to.be.lessThan(point2.distance);
 		});
 	});
+
+	describe("#_containsPoint", function () {
+		beforeEach(function () {
+			map.options.preferCanvas = true; // Necessary for _containsPoint to function
+			map.setZoom(0); // LatLngToLayerPoint won't function correctly if points aren't on screen
+		});
+
+		it("fail to check points if preferCanvas is false on map", function () {
+			map.options.preferCanvas = false;
+			var latlngs = [
+				[1, 1],
+				[2, 2]
+			];
+			var layerPoint1 = map.latLngToLayerPoint([10, 10]);
+			var layerPoint2 = map.latLngToLayerPoint([15, 15]);
+			var polyline = L.polyline(latlngs);
+
+			polyline.addTo(map);
+
+			expect(polyline._containsPoint(layerPoint1, false)).to.be(false);
+			expect(polyline._containsPoint(layerPoint2, false)).to.be(false);
+		});
+
+		it("don't throw error if polyline is empty (#5497)", function () {
+			var latlngs = [];
+			var layerPoint = map.latLngToLayerPoint([0, 0]);
+			var polyline = L.polyline(latlngs);
+
+			polyline.addTo(map);
+
+			expect(function () {
+				polyline._containsPoint(layerPoint, false);
+			}).to.not.throwError();
+		});
+
+		it("throw error if not attached to map", function () {
+			var latlngs = [
+				[1, 1],
+				[2, 2]
+			];
+
+			var layerPoint = map.latLngToLayerPoint([15, 15]);
+			var polyline = L.polyline(latlngs);
+
+			expect(function () {
+				polyline._containsPoint(layerPoint, false);
+			}).to.throwError();
+		});
+
+		it("check if point is contained within non-closed polyline", function () {
+			var latlngs = [
+				[1, 1],
+				[2, 2]
+			];
+			var layerPoint1 = map.latLngToLayerPoint([10, 10]);
+			var layerPoint2 = map.latLngToLayerPoint([1.5, 1.5]);
+			var polyline = L.polyline(latlngs);
+
+			polyline.addTo(map);
+
+			expect(polyline._containsPoint(layerPoint1, false)).to.be(false);
+			expect(polyline._containsPoint(layerPoint2, false)).to.be(true);
+		});
+
+		it("check if point is contained within non-closed multi polyline", function () {
+			var latlngs = [
+				[[1, 1], [2, 2]]
+			];
+			var layerPoint1 = map.latLngToLayerPoint([10, 10]);
+			var layerPoint2 = map.latLngToLayerPoint([1.5, 1.5]);
+			var polyline = L.polyline(latlngs);
+
+			polyline.addTo(map);
+
+			expect(polyline._containsPoint(layerPoint1, false)).to.be(false);
+			expect(polyline._containsPoint(layerPoint2, false)).to.be(true);
+		});
+
+		it.skip("check if point is contained within closed polygon", function () {
+			var latlngs = [
+				[1, 1],
+				[1, 2],
+				[2, 2],
+				[2, 1],
+			];
+			var layerPoint1 = map.latLngToLayerPoint([5, 5]);
+			var layerPoint2 = map.latLngToLayerPoint([1, 1.5]);
+			var polygon = L.polygon(latlngs);
+
+			polygon.addTo(map);
+
+			expect(L.Polyline.prototype._containsPoint.call(polygon, layerPoint1, false)).to.be(false);
+			expect(L.Polyline.prototype._containsPoint.call(polygon, layerPoint2, false)).to.be(true);
+		});
+	});
 });
