@@ -74,6 +74,8 @@ export const Popup = DivOverlay.extend({
 		// to fit the opened popup.
 		autoPan: true,
 
+		autoPanOptions: {},
+
 		// @option autoPanPaddingTopLeft: Point = null
 		// The margin between the popup and the top left corner of the map
 		// view after autopanning was performed.
@@ -305,7 +307,7 @@ export const Popup = DivOverlay.extend({
 
 			map
 			    .fire('autopanstart')
-			    .panBy([dx, dy]);
+			    .panBy([dx, dy], this.options.autoPanOptions);
 		}
 	},
 
